@@ -6,10 +6,13 @@ use argon2::{
 };
 use rusqlite::{params, Connection};
 use serde::Serialize;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tauri::{Manager, State};
 
 const PORT: u16 = 8787;
+// dev panel: while set, the window is allowed to stay out of fullscreen
+static WINDOWED: AtomicBool = AtomicBool::new(false);
 type Db = Arc<Mutex<Connection>>;
 type R<T> = Result<T, String>;
 
@@ -160,6 +163,89 @@ fn delete_course(db: State<Db>, id: i64) -> R<()> {
 }
 
 #[tauri::command]
+fn update_course(db: State<Db>, id: i64, description: String) -> R<()> {
+    let c = db.lock().map_err(err)?;
+    c.execute("UPDATE courses SET description=?1 WHERE id=?2", params![description.trim(), id])
+        .map(|_| ())
+        .map_err(err)
+}
+
+// videos/ is searched upward from the exe, so it works from target/debug, target/release or next to a copied exe
+fn videos_root() -> Option<std::path::PathBuf> {
+    let exe = std::env::current_exe().ok()?;
+    exe.ancestors().skip(1).map(|d| d.join("videos")).find(|d| d.is_dir())
+}
+
+#[derive(Serialize)]
+struct Lesson {
+    title: String,
+    video: String,
+    sub_id: Option<String>,
+    sub_en: Option<String>,
+}
+
+#[tauri::command]
+fn list_lessons(course: String) -> R<Vec<Lesson>> {
+    if course.is_empty() || course.contains(['/', '\\', '.']) {
+        return Err("Kursus tidak valid".into());
+    }
+    let Some(dir) = videos_root().map(|r| r.join(&course)) else { return Ok(vec![]) };
+    let Ok(rd) = std::fs::read_dir(&dir) else { return Ok(vec![]) };
+    let files: Vec<_> = rd.flatten().map(|e| e.path()).collect();
+    let find = |stem: &str, suffix: &str| {
+        let want = format!("{}{}.vtt", stem.to_lowercase(), suffix);
+        files.iter().find(|p| p.file_name().map_or(false, |n| n.to_string_lossy().to_lowercase() == want))
+            .map(|p| p.to_string_lossy().into_owned())
+    };
+    let mut out: Vec<Lesson> = files.iter()
+        .filter(|p| p.extension().map_or(false, |e| e.eq_ignore_ascii_case("mp4")))
+        .filter_map(|p| {
+            let stem = p.file_stem()?.to_string_lossy().into_owned();
+            Some(Lesson { sub_id: find(&stem, "_ind"), sub_en: find(&stem, "_eng"), video: p.to_string_lossy().into_owned(), title: stem })
+        })
+        .collect();
+    // "2. x" before "10. y": order by the leading lesson number, then name
+    let num = |t: &str| t.split('.').next().and_then(|n| n.trim().parse::<u32>().ok()).unwrap_or(u32::MAX);
+    out.sort_by(|a, b| num(&a.title).cmp(&num(&b.title)).then(a.title.cmp(&b.title)));
+    Ok(out)
+}
+
+#[tauri::command]
+fn read_sub(path: String) -> R<String> {
+    let root = videos_root().ok_or("Folder videos tidak ditemukan")?.canonicalize().map_err(err)?;
+    let p = std::path::Path::new(&path).canonicalize().map_err(err)?;
+    if !p.starts_with(&root) || p.extension().map_or(true, |e| !e.eq_ignore_ascii_case("vtt")) {
+        return Err("File tidak diizinkan".into());
+    }
+    std::fs::read_to_string(p).map_err(err)
+}
+
+#[tauri::command]
+fn set_view(window: tauri::WebviewWindow, mode: String) -> R<()> {
+    let size = match mode.as_str() {
+        "fullscreen" => None,
+        "768" => Some((1366.0, 768.0)),
+        "1080" => Some((1920.0, 1080.0)),
+        "1440" => Some((2560.0, 1440.0)),
+        _ => return Err("Mode tidak dikenal".into()),
+    };
+    match size {
+        None => {
+            WINDOWED.store(false, Ordering::SeqCst);
+            window.set_fullscreen(true).map_err(err)
+        }
+        Some((w, h)) => {
+            WINDOWED.store(true, Ordering::SeqCst);
+            window.set_fullscreen(false).map_err(err)?;
+            window.set_resizable(true).map_err(err)?;
+            window.set_size(tauri::LogicalSize::new(w, h)).map_err(err)?;
+            window.center().map_err(err)?;
+            window.set_resizable(false).map_err(err)
+        }
+    }
+}
+
+#[tauri::command]
 fn server_info() -> String {
     let ip = local_ip_address::local_ip().map(|i| i.to_string()).unwrap_or("127.0.0.1".into());
     format!("http://{}:{}", ip, PORT)
@@ -195,6 +281,12 @@ fn serve(db: Db) {
 
 fn main() {
     tauri::Builder::default()
+        // leaving a video's own fullscreen drops the window out of fullscreen; put it back
+        .on_window_event(|w, e| {
+            if matches!(e, tauri::WindowEvent::Resized(_)) && !WINDOWED.load(Ordering::SeqCst) && !w.is_fullscreen().unwrap_or(true) {
+                let _ = w.set_fullscreen(true);
+            }
+        })
         .setup(|app| {
             let dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&dir)?;
@@ -239,11 +331,14 @@ fn main() {
             let shared = db.clone();
             std::thread::spawn(move || serve(shared));
             app.manage(db);
+            if let Some(root) = videos_root() {
+                app.asset_protocol_scope().allow_directory(root, true).map_err(|e| e.to_string())?;
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             needs_setup, setup_teacher, login, list_students, list_staff, add_student, delete_student,
-            list_courses, add_course, delete_course, server_info, quit
+            list_courses, add_course, delete_course, update_course, set_view, list_lessons, read_sub, server_info, quit
         ])
         .run(tauri::generate_context!())
         .expect("gagal menjalankan aplikasi");

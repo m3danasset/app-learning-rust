@@ -151,3 +151,6 @@ vite.config.ts.timestamp-*
 # Tauri
 src-tauri/target/
 src-tauri/gen/schemas/
+
+# Lesson videos/subtitles (GBs, kept on disk next to the app)
+videos/

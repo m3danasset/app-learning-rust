@@ -13,7 +13,7 @@
     "windows": [
       { "title": "E-Learning Guru", "fullscreen": true, "decorations": false, "resizable": false }
     ],
-    "security": { "csp": null }
+    "security": { "csp": null, "assetProtocol": { "enable": true, "scope": [] } }
   },
   "bundle": {
     "active": true,

@@ -1,4 +1,4 @@
-:root{--ink:#f2efe9;--mute:#9b9a97;--line:rgba(255,255,255,.09);--card:rgba(32,32,32,.72);--accent:#f97316;--danger:#ff7a8a}
+:root{--shadow-a:.35;--shadow:0 8px 24px rgba(0,0,0,var(--shadow-a));--ink:#f2efe9;--mute:#9b9a97;--line:rgba(255,255,255,.09);--card:rgba(32,32,32,.72);--accent:#f97316;--danger:#ff7a8a}
 *{box-sizing:border-box;margin:0}
 html{font-size:clamp(14px,.36vw + 9px,16px)}
 body{font-family:"Segoe UI",system-ui,sans-serif;color:var(--ink);height:100vh;overflow:hidden;background:linear-gradient(rgba(12,12,12,.78),rgba(12,12,12,.78)),url(/latar_login.png) center/cover #141414}
@@ -79,12 +79,12 @@ th,td{text-align:left;padding:.65rem .5rem;border-bottom:1px solid var(--line)}
 th{color:var(--mute);font-weight:600;font-size:.85rem}
 .url{font-size:1.6rem;font-weight:700;color:var(--accent);margin:.4rem 0}
 
-.carousel{width:calc(100% - 7.5rem);min-width:0;max-width:calc(4 * 18rem + 3 * 1.25rem + 6rem);container-type:inline-size}
-/* --n whole cards fill the space between the 3rem fade edges, so snapped cards are never cut */
-.track{--n:4;display:flex;gap:1.25rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 3rem;scroll-behavior:smooth;scrollbar-width:none;user-select:none;cursor:grab;padding:.25rem 3rem;mask-image:linear-gradient(to right,transparent,#000 3rem,#000 calc(100% - 3rem),transparent)}
-@container (max-width:62rem){.track{--n:3}}
-@container (max-width:46rem){.track{--n:2}}
-@container (max-width:30rem){.track{--n:1}}
+.carousel{width:calc(100% - 7.5rem);min-width:0;max-width:calc(4 * 18rem + 3 * 1.25rem + 18rem);container-type:inline-size}
+/* --n whole cards fill the space between the 9rem fade edges, so snapped cards are never cut */
+.track{--n:4;display:flex;gap:1.25rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 9rem;scroll-behavior:smooth;scrollbar-width:none;user-select:none;cursor:grab;padding:2.5rem 9rem;margin-block:-2.25rem;mask-image:linear-gradient(to right,transparent,#000 9rem,#000 calc(100% - 9rem),transparent)}
+@container (max-width:74rem){.track{--n:3}}
+@container (max-width:58rem){.track{--n:2}}
+@container (max-width:42rem){.track{--n:1}}
 .track::-webkit-scrollbar{display:none}
 .track.dragging{scroll-snap-type:none;scroll-behavior:auto;cursor:grabbing}
 .ccard{flex:none;width:calc((100% - (var(--n) - 1) * 1.25rem) / var(--n));aspect-ratio:4/5;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:flex-end;padding:1.25rem;text-align:left;border:0;border-radius:1.4rem;outline:none;overflow:hidden;background:linear-gradient(to top,rgba(10,10,10,.88) 15%,rgba(10,10,10,.1) 75%) no-repeat,var(--img),linear-gradient(135deg,var(--c),#232323 90%)}
@@ -101,3 +101,72 @@ th{color:var(--mute);font-weight:600;font-size:.85rem}
 .round{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;border:2px solid var(--ink);background:none;cursor:pointer}
 .round:hover:not(:disabled){background:rgba(255,255,255,.12)}
 .round:disabled{border:1px solid var(--line);opacity:.4;cursor:default}
+.dash-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:1rem}
+.dash-head .hero{font-size:1.9rem}
+.quick{display:flex;gap:.75rem}
+.qa{display:grid;justify-items:center;gap:.4rem;min-width:8.5rem;padding:.9rem 1rem;color:inherit;cursor:pointer}
+.qa svg{width:1.6rem;height:1.6rem;color:var(--accent)}
+.qa:hover,.stat:hover{border-color:rgba(255,255,255,.22)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1rem}
+.stat{display:flex;align-items:center;gap:1rem;color:inherit;text-align:left;cursor:pointer}
+.badge{display:grid;place-items:center;width:3.6rem;height:3.6rem;border-radius:1rem;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c)}
+.badge svg{width:1.6rem;height:1.6rem}
+.lbl{display:grid}
+.lbl b{font-size:1.9rem;line-height:1.1}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:1rem}
+.panel{display:grid;gap:.25rem;align-content:start}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+.ph h2{font-size:1.25rem}
+.link{border:0;background:none;color:var(--accent);cursor:pointer}
+.li{display:flex;align-items:center;gap:.8rem;padding:.7rem 0;border-top:1px solid var(--line)}
+.li.course{border-left:3px solid var(--c);border-top-color:var(--line);padding-left:.8rem}
+.grow2{display:grid;min-width:0}
+.grow2 small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.edit{background:none;border-color:transparent;color:inherit;padding:.3rem .5rem}
+.edit:hover,.edit:focus{border-color:var(--line);background:rgba(255,255,255,.05)}
+.player{display:grid;gap:1rem;width:100%;text-align:left}
+.pbar{display:flex;align-items:center;gap:1rem}
+.pbar .round{width:2.6rem;height:2.6rem}
+.player video{width:var(--vw);aspect-ratio:16/9;border-radius:1.2rem;background:#000}
+.pbody{display:grid;grid-template-columns:20rem minmax(0,1fr);gap:2.5rem;align-items:start}
+.lessons{list-style:none;display:grid;grid-template-columns:minmax(0,1fr);gap:.25rem;align-self:stretch;contain:size;overflow:auto;scrollbar-width:none;order:-1;padding:1.5rem;margin:-1.5rem -1.5rem -5.5rem}
+.lessons::-webkit-scrollbar{display:none}
+.lessons button{width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:.6rem .8rem;border:0;border-radius:.7rem;background:none;text-align:left;cursor:pointer;color:var(--mute)}
+.lessons button:hover{background:rgba(255,255,255,.06)}
+.lessons button.on{background:rgba(255,255,255,.1);color:var(--ink)}
+@media(max-width:60rem){.pbody{grid-template-columns:1fr}}
+.stage{--vw:min(100%,calc(78vh * 16 / 9));display:grid;gap:.75rem;min-width:0}
+.vtitle{display:flex;align-items:center;gap:.5rem}
+.vtitle h2{font-size:2.5rem;font-weight:600;line-height:1.15}
+.vtitle .ico{width:2.6rem;height:2.6rem}
+.vtitle .ico svg{width:1.6rem;height:1.6rem}
+
+/* one soft drop shadow for every surface; change only --shadow-a (top of file) to tune it everywhere */
+.card,.tile,.ccard,.side,.pop,.id,.player video,.lessons button.on,.round,.btn,.av,.badge,.nb{box-shadow:var(--shadow)}
+.round:disabled{box-shadow:none}
+/* text-overflow doesn't apply to a <button> itself, only to a block inside it */
+.lessons button span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* fade the list's top/bottom edge so scrolled rows dissolve instead of showing behind the header */
+.lessons{mask-image:linear-gradient(to bottom,transparent .5rem,#000 1.5rem,#000 calc(100% - 1.5rem),transparent calc(100% - .5rem))}
+textarea.edit{display:block;width:100%;resize:none;font:inherit;line-height:1.4;border:1px solid transparent;border-radius:.7rem;background:none;color:inherit;padding:.3rem .5rem;overflow:hidden}
+textarea.edit:hover,textarea.edit:focus{border-color:var(--line);background:rgba(255,255,255,.05)}
+.ccard p span{white-space:pre-line}
+
+/* dev panel: floats above everything, drag by the header */
+.dev{position:fixed;z-index:1000;width:13rem;background:#262626;border:1px solid var(--line);border-radius:1rem;box-shadow:var(--shadow);overflow:hidden}
+.dev-head{display:flex;justify-content:space-between;align-items:center;padding:.5rem .6rem .5rem .9rem;border-bottom:1px solid var(--line);cursor:move;touch-action:none;user-select:none}
+.dev-body{display:grid;gap:.4rem;padding:.8rem}
+.dev-opt{padding:.5rem .7rem;border:1px solid var(--line);border-radius:.6rem;background:none;text-align:left;cursor:pointer}
+.dev-opt:hover{background:rgba(255,255,255,.06)}
+.dev-opt.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.vnav{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;width:var(--vw)}
+.nb{display:flex;align-items:center;gap:.4rem;padding:.55rem 1rem;border:1px solid var(--line);border-radius:.8rem;background:var(--card);cursor:pointer}
+.nb:hover:not(:disabled){background:rgba(255,255,255,.1)}
+.nb:disabled{opacity:.4;cursor:default;box-shadow:none}
+/* note bar: fixed-height slot between the buttons; the box only shows (and grows downward) while the cursor is in it */
+.note{position:relative;flex:1;height:2.6rem;min-width:0}
+.note textarea{position:absolute;inset:0 0 auto 0;width:100%;height:2.6rem;resize:none;padding:.6rem .9rem;border:1px solid transparent;border-radius:.8rem;background:none;font:inherit;line-height:1.4;overflow:hidden;transition:height .2s}
+.note textarea{color:var(--ink)}
+.note textarea::placeholder{color:transparent}
+.note textarea:focus::placeholder{color:var(--mute)}
+.note textarea:focus{height:8rem;z-index:2;outline:none;border-color:var(--line);background:#262626;box-shadow:var(--shadow);overflow:auto}
