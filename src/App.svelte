@@ -17,11 +17,13 @@
     chev: "M7 15l5 5 5-5M7 9l5-5 5 5",
   };
 
-  let user = $state(null);
+  // kept in sessionStorage so Ctrl+R reload stays logged in; cleared when the app closes
+  let user = $state(JSON.parse(sessionStorage.getItem("user") ?? "null"));
+  $effect(() => { user ? sessionStorage.setItem("user", JSON.stringify(user)) : sessionStorage.removeItem("user"); });
   let tab = $state("dashboard");
   let err = $state("");
   let url = $state("");
-  let collapsed = $state(false);
+  let collapsed = $state(true);
   let menuOpen = $state(false);
   let track = $state();
   let atStart = $state(true);
@@ -30,6 +32,13 @@
   let staff = $state([]);
   let students = $state([]);
   let courses = $state([]);
+  // trial sees two fixed preview cards instead of the course list
+  const trialCards = [
+    { id: "modeling", title: "MODELING", description: "Build 3D objects from basic shapes." },
+    { id: "animation", title: "ANIMATION", description: "Bring objects and characters to life with motion." },
+  ];
+  const trial = $derived(user?.role === "trial");
+  const cards = $derived(trial ? trialCards : courses);
   let f = $state({ name: "", username: "", title: "", description: "" });
   const tr = {
     id: {
@@ -66,7 +75,13 @@
     atStart = track.scrollLeft < 4;
     atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
   };
-  const slide = (d) => track?.scrollBy({ left: d * track.clientWidth * 0.8, behavior: "smooth" });
+  // public/courses/<slug>.<ext>; missing files simply don't paint, so the color gradient shows through
+  const img = (title) => {
+    const s = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return ["webp", "jpg", "png"].map((e) => `url("/courses/${s}.${e}") center/cover no-repeat`).join(",");
+  };
+  // one page = the visible cards; snap keeps the landing card aligned
+  const slide = (d) => track?.scrollBy({ left: d * (track.children[1]?.offsetLeft - track.children[0]?.offsetLeft || 0) * +getComputedStyle(track).getPropertyValue("--n"), behavior: "smooth" });
   const down = (e) => { if (e.pointerType === "mouse") drag = { x: e.clientX, left: track.scrollLeft, moved: false }; };
   const move = (e) => {
     if (!drag) return;
@@ -77,7 +92,7 @@
   const up = () => { drag = null; track?.classList.remove("dragging"); };
   $effect(() => { courses.length; track; edges(); });
 
-  onMount(async () => { url = await invoke("server_info"); });
+  onMount(async () => { if (user) load(); url = await invoke("server_info"); });
 
   async function auth() {
     const u = await run("login", { username: f.username });
@@ -94,7 +109,7 @@
   const del = async (cmd, id) => { await run(cmd, { id }); load(); };
 </script>
 
-<svelte:window onresize={edges} />
+<svelte:window onresize={edges} onkeydown={(e) => { if ((e.ctrlKey && e.key.toLowerCase() === "r") || e.key === "F5") { e.preventDefault(); location.reload(); } }} />
 
 <button class="x" onclick={() => run("quit")} aria-label="Exit">
   <svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" /></svg>
@@ -138,21 +153,24 @@
       {#if tab === "dashboard"}
         <h1 class="hero">{t.welcome}</h1>
         <p class="mute sub">{t.hello}, {user.name}. {t.pick}</p>
-        {#if courses.length}
-          <div class="carousel">
+        {#if cards.length}
+          <div class="carousel" class:fixed={trial}>
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div class="track" bind:this={track} onscroll={edges} onpointerdown={down} onpointermove={move} onpointerup={up} onpointerleave={up}>
-              {#each courses as c, i (c.id)}
-                <article class="ccard" style="--c:{colors[i % 4]}">
+              {#each cards as c, i (c.id)}
+                <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+                <article class="ccard" tabindex="0" style="--c:{colors[i % 4]};--img:{img(c.title)}">
                   <strong>{c.title}</strong>
-                  <p>{c.description}</p>
+                  <p><span>{c.description}</span></p>
                 </article>
               {/each}
             </div>
+            {#if !trial}
             <div class="nav2">
               <button class="round" disabled={atStart} onclick={() => slide(-1)} aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" /></svg></button>
               <button class="round" disabled={atEnd} onclick={() => slide(1)} aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg></button>
             </div>
+            {/if}
           </div>
         {:else}
           <p class="mute">{t.noCourses}</p>

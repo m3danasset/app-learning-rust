@@ -25,11 +25,12 @@ h1{font-size:1.5rem}
 .layout{display:grid;grid-template-columns:16.75rem 1fr;height:100vh}
 .layout.collapsed{grid-template-columns:4.25rem 1fr}
 .side{background:rgba(22,22,22,.94);border-right:1px solid var(--line);padding:.75rem;display:flex;flex-direction:column;gap:.2rem;min-width:0}
-.top{display:flex;align-items:center;justify-content:space-between;padding:.25rem .4rem 1rem}
+.top{box-sizing:border-box;height:3.75rem;display:flex;align-items:center;justify-content:space-between;padding:.25rem .4rem 1rem}
 .mini{width:8rem}
 .ico{display:grid;place-items:center;width:2rem;height:2rem;border:0;border-radius:.5rem;background:none;color:var(--mute);cursor:pointer}
 .ico:hover{background:rgba(255,255,255,.08);color:var(--ink)}
-.nav,.me{display:flex;align-items:center;gap:.75rem;width:100%;padding:.6rem .7rem;border:0;border-radius:.7rem;background:none;cursor:pointer;text-align:left}
+/* left padding puts every icon/avatar center on the collapsed rail's center (2.125rem), so nothing shifts on toggle */
+.nav,.me{display:flex;align-items:center;gap:.75rem;width:100%;padding:.6rem .8rem;border:0;border-radius:.7rem;background:none;cursor:pointer;text-align:left}
 .nav:hover,.me:hover{background:rgba(255,255,255,.06)}
 .nav.on{background:rgba(255,255,255,.1)}
 .grow{flex:1}
@@ -41,8 +42,16 @@ h1{font-size:1.5rem}
 .pop{position:absolute;bottom:calc(100% + .35rem);left:0;min-width:10rem;padding:.3rem;background:#262626;border:1px solid var(--line);border-radius:.8rem}
 .pop button{width:100%;padding:.55rem .7rem;border:0;border-radius:.5rem;background:none;text-align:left;cursor:pointer}
 .pop button:hover{background:rgba(255,255,255,.08)}
-.collapsed .mini,.collapsed .nav span,.collapsed .who,.collapsed .me>svg{display:none}
-.collapsed .top{justify-content:center;padding-inline:0}
+/* collapsed rail widens over the page on hover/keyboard focus instead of pushing the content */
+.collapsed .side{position:relative;z-index:5;width:4.25rem;overflow:hidden;transition:width .2s}
+.collapsed .side:hover,.collapsed .side:focus-within{width:16.75rem}
+.nav span,.who{white-space:nowrap}
+/* fade (not display:none) so rows keep their height and nothing jumps vertically */
+.nav span,.who,.me>svg,.mini{transition:opacity .2s}
+.collapsed .side:not(:hover,:focus-within) :is(.nav span,.who,.me>svg){opacity:0}
+.collapsed .side:not(:hover,:focus-within) .mini{display:none}
+.collapsed .side:not(:hover,:focus-within) .top{justify-content:center;padding-inline:0}
+.me{padding:.4rem .275rem}
 
 /* isi halaman */
 main{overflow:auto;padding:2rem 3.5rem 2rem 2.5rem;display:grid;grid-template-columns:minmax(0,1fr);gap:1rem;align-content:start}
@@ -70,14 +79,25 @@ th,td{text-align:left;padding:.65rem .5rem;border-bottom:1px solid var(--line)}
 th{color:var(--mute);font-weight:600;font-size:.85rem}
 .url{font-size:1.6rem;font-weight:700;color:var(--accent);margin:.4rem 0}
 
-.carousel{width:100%;min-width:0}
-.track{display:flex;gap:1.25rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:.25rem;scroll-behavior:smooth;scrollbar-width:none;user-select:none;cursor:grab;padding:.25rem}
+.carousel{width:calc(100% - 7.5rem);min-width:0;max-width:calc(4 * 18rem + 3 * 1.25rem + 6rem);container-type:inline-size}
+/* --n whole cards fill the space between the 3rem fade edges, so snapped cards are never cut */
+.track{--n:4;display:flex;gap:1.25rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 3rem;scroll-behavior:smooth;scrollbar-width:none;user-select:none;cursor:grab;padding:.25rem 3rem;mask-image:linear-gradient(to right,transparent,#000 3rem,#000 calc(100% - 3rem),transparent)}
+@container (max-width:62rem){.track{--n:3}}
+@container (max-width:46rem){.track{--n:2}}
+@container (max-width:30rem){.track{--n:1}}
 .track::-webkit-scrollbar{display:none}
 .track.dragging{scroll-snap-type:none;scroll-behavior:auto;cursor:grabbing}
-.ccard{flex:none;width:clamp(16rem,22vw,22rem);aspect-ratio:5/4;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:flex-end;gap:.4rem;padding:1.25rem;text-align:left;border:1px solid var(--line);border-radius:1.4rem;background:linear-gradient(to top,rgba(10,10,10,.88) 15%,rgba(10,10,10,.1) 75%),linear-gradient(135deg,var(--c),#232323 90%)}
-.ccard strong{font-size:1.5rem;line-height:1.2}
-.ccard p{color:#d6d3cd;font-size:.9rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.nav2{display:flex;justify-content:center;gap:.75rem;margin-top:1.25rem}
+.ccard{flex:none;width:calc((100% - (var(--n) - 1) * 1.25rem) / var(--n));aspect-ratio:4/5;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:flex-end;padding:1.25rem;text-align:left;border:0;border-radius:1.4rem;outline:none;overflow:hidden;background:linear-gradient(to top,rgba(10,10,10,.88) 15%,rgba(10,10,10,.1) 75%) no-repeat,var(--img),linear-gradient(135deg,var(--c),#232323 90%)}
+.ccard strong{font-size:1.35rem;line-height:1.2}
+.ccard p{display:grid;grid-template-rows:0fr;opacity:0;color:#d6d3cd;font-size:.9rem;transition:grid-template-rows .3s,opacity .3s,margin .3s}
+.ccard p span{overflow:hidden;min-height:0}
+.ccard:hover p,.ccard:focus-visible p{grid-template-rows:1fr;opacity:1;margin-top:.5rem}
+.ccard:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.carousel{position:relative}
+/* arrows sit outside the fade strips, vertically centered on the cards */
+.nav2{position:absolute;inset:0 -3.75rem;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.nav2 .round{pointer-events:auto}
+.carousel.fixed .track{justify-content:center;cursor:default}
 .round{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;border:2px solid var(--ink);background:none;cursor:pointer}
 .round:hover:not(:disabled){background:rgba(255,255,255,.12)}
 .round:disabled{border:1px solid var(--line);opacity:.4;cursor:default}

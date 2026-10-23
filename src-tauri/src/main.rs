@@ -207,7 +207,33 @@ fn main() {
                    id INTEGER PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL DEFAULT '');
                  INSERT OR IGNORE INTO users(name,username,password_hash,role) VALUES
                    ('Admin','admin001','','admin'),('Guru','guru001','','teacher'),
-                   ('PB','pb001','','pb'),('Trial','trial','','trial');",
+                   ('PB','pb001','','pb'),('Trial','trial','','trial');
+                 DELETE FROM courses WHERE title IN
+                   ('Matematika','Bahasa Indonesia','IPA','Bahasa Inggris','IPS')
+                   AND description IN ('Bilangan, aljabar, dan geometri dasar.','Membaca, menulis, dan tata bahasa.',
+                     'Mengenal alam, makhluk hidup, dan energi.','Kosakata dan percakapan sehari-hari.',
+                     'Sejarah, geografi, dan kehidupan sosial.');
+                 INSERT INTO courses(title,description)
+                   SELECT * FROM (VALUES
+                     ('AI - PRODUCT','Create product visuals with AI.'),
+                     ('AI - INTERIOR','Create interior designs with AI.'),
+                     ('AI - CHARACTER','Create characters with AI.'),
+                     ('INTERMEDIATE 2 - INTERIOR','Advanced interior design: materials, lighting and rendering.'),
+                     ('INTERMEDIATE 1 - INTERIOR','Interior design basics: space, layout and furniture.'),
+                     ('INTERMEDIATE 2 - CHARACTER','Advanced character design: pose, expression and detail.'),
+                     ('INTERMEDIATE 1 - CHARACTER','Character design basics: shape, proportion and anatomy.'),
+                     ('BASIC 2','Beyond the basics: composition, color and technique.'),
+                     ('BASIC 1','Introduction to the tools and design fundamentals.'))
+                   WHERE NOT EXISTS (SELECT 1 FROM courses);
+                 UPDATE courses SET description='Create product visuals with AI.' WHERE description='Membuat visual produk dengan bantuan AI.';
+                 UPDATE courses SET description='Create interior designs with AI.' WHERE description='Membuat desain interior dengan bantuan AI.';
+                 UPDATE courses SET description='Create characters with AI.' WHERE description='Membuat karakter dengan bantuan AI.';
+                 UPDATE courses SET description='Advanced interior design: materials, lighting and rendering.' WHERE description='Desain interior lanjutan: material, cahaya, dan render.';
+                 UPDATE courses SET description='Interior design basics: space, layout and furniture.' WHERE description='Dasar desain interior: ruang, layout, dan furnitur.';
+                 UPDATE courses SET description='Advanced character design: pose, expression and detail.' WHERE description='Desain karakter lanjutan: pose, ekspresi, dan detail.';
+                 UPDATE courses SET description='Character design basics: shape, proportion and anatomy.' WHERE description='Dasar desain karakter: bentuk, proporsi, dan anatomi.';
+                 UPDATE courses SET description='Beyond the basics: composition, color and technique.' WHERE description='Lanjutan dasar: komposisi, warna, dan teknik.';
+                 UPDATE courses SET description='Introduction to the tools and design fundamentals.' WHERE description='Pengenalan alat dan dasar-dasar desain.';",
             )?;
             let db: Db = Arc::new(Mutex::new(c));
             let shared = db.clone();
