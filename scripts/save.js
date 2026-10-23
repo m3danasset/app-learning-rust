@@ -1,4 +1,4 @@
-// Bumps the patch version everywhere it lives, then commits all changes.
+// Bumps the patch version everywhere it lives, commits all changes, then opens the app.
 // Usage: npm run save -- "optional message"
 import { readFileSync, writeFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
@@ -24,3 +24,5 @@ const msg = process.argv[2] ? `v${next}: ${process.argv[2]}` : `v${next}`;
 execSync('git add -A', { stdio: 'inherit' });
 execSync(`git commit -m ${JSON.stringify(msg)}`, { stdio: 'inherit' });
 console.log(`Committed ${msg}`);
+
+execSync('npm run tauri dev', { stdio: 'inherit' });
